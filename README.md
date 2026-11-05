@@ -1,6 +1,6 @@
-# SPX Log — Diário de voo
+# Órbita Log — Diário de voo
 
-Aplicativo Flutter que funciona como um diário de bordo das missões da SpaceX: mostra o último lançamento, a lista completa de missões (com filtro e busca), a frota de foguetes e dados da empresa. Todas as informações vêm da API em tempo de execução.
+Aplicativo Flutter que funciona como um diário de bordo de lançamentos espaciais: mostra o próximo lançamento com contagem de dias, a lista de missões (com filtro e busca), os foguetes mais utilizados e estatísticas gerais. Todas as informações vêm da API em tempo de execução.
 
 ## Objetivo
 
@@ -13,32 +13,35 @@ Trabalho acadêmico para praticar requisições HTTP, leitura de JSON, `async`/`
 
 ## API utilizada
 
-- **Nome:** SpaceX API (r/SpaceX), versão 4
-- **Endereço:** https://api.spacexdata.com/v4
-- **Documentação:** https://github.com/r-spacex/SpaceX-API/tree/master/docs
-- **Autenticação:** não é necessária para leitura (GET)
+- **Nome:** Launch Library 2 (The Space Devs)
+- **Endereço:** https://ll.thespacedevs.com/2.2.0
+- **Documentação:** https://ll.thespacedevs.com/docs/
+- **Autenticação:** não é necessária no plano gratuito (limite de 15 requisições por hora)
 
 Endpoints consumidos:
 
 | Endpoint | Uso no app |
 |---|---|
-| `GET /launches` | lista de missões, filtros e busca |
-| `GET /launches/latest` | destaque da tela inicial |
-| `GET /rockets` | tela da frota e nome do foguete de cada missão |
-| `GET /company` | indicadores e resumo da empresa |
+| `GET /launch/upcoming/` | próximos lançamentos e destaque da tela inicial |
+| `GET /launch/previous/` | lançamentos já realizados |
+| `GET /config/launcher/` | tela da frota (foguetes com mais lançamentos) |
+
+Os textos de descrição (missões e foguetes) são fornecidos pela API em inglês.
+
+Por causa do limite de requisições, o app guarda as respostas em memória por 10 minutos e agrupa pedidos idênticos. Puxar para atualizar força uma nova consulta (no mínimo 1 minuto após a anterior). Se o limite for atingido, o app mostra uma mensagem explicando. Para usar a versão de desenvolvimento da API (limite maior, dados mais antigos), troque `ll.` por `lldev.` em `lib/services/space_service.dart`.
 
 ## Funcionalidades
 
-- Tela inicial com o último lançamento registrado e dados da empresa
-- Lista de missões com filtro (todos, sucesso, falha, próximos) e busca por nome
-- Tela de detalhe da missão (data, hora UTC, foguete, relatório, falhas e links)
-- Tela da frota com foto, medidas e taxa de sucesso de cada foguete
-- Estado de carregamento, mensagens de erro (sem internet, timeout, resposta inválida) com botão "tentar de novo" e mensagem para listas vazias
+- Tela inicial com o próximo lançamento (contagem em dias), totais de missões realizadas e agendadas e descrição da missão
+- Lista de missões com filtro (todos, sucesso, falha, próximos) e busca por missão, foguete ou agência
+- Tela de detalhe da missão (data, hora UTC, foguete, órbita, relatório, motivo da falha e plataforma)
+- Tela da frota com foto, medidas, número de lançamentos e taxa de sucesso
+- Estado de carregamento, mensagens de erro (sem internet, timeout, limite da API, resposta inválida) com botão "tentar de novo" e mensagem para listas vazias
 - Puxar para atualizar em todas as telas
 
 ## Identidade visual
 
-Tema "controle de missão": fundo grafite, texto cor de osso e um único laranja de sinalização. Títulos grossos e apertados, dados e rótulos em fonte monoespaçada. Não usa AppBar, cards arredondados nem BottomNavigationBar padrão: a navegação é própria (itens numerados com barra deslizante), as listas são separadas por filetes e os indicadores ficam em linhas divididas. Algumas composições são deliberadamente assimétricas (número do voo à direita, imagens com recuo alternado).
+Tema "controle de missão": fundo grafite, texto cor de osso e um único laranja de sinalização. Títulos grossos e apertados, dados e rótulos em fonte monoespaçada. Não usa AppBar, cards arredondados nem BottomNavigationBar padrão: a navegação é própria (itens numerados com barra deslizante), as listas são separadas por filetes e os indicadores ficam em linhas divididas. Algumas composições são deliberadamente assimétricas (contagem gigante à direita, imagens com recuo alternado).
 
 ## Como executar
 
@@ -70,14 +73,10 @@ O app precisa de conexão com a internet. O `flutter create` pode gerar `test/wi
 ```
 lib/
   main.dart                 ponto de entrada
-  models/                   Launch, Rocket, Company (fromJson)
-  services/                 SpaceXService (requisições HTTP e erros)
+  models/                   Launch e Rocket (fromJson)
+  services/                 SpaceService (requisições HTTP, cache e erros)
   screens/                  AppShell, Home, Missões, Detalhe, Frota
   widgets/                  navegação, filtros, linhas, indicadores, estados
   theme/                    cores e estilos de texto
-  utils/                    formatação de datas/números e transição de rota
+  utils/                    leitura de JSON, formatação e transição de rota
 ```
-
-## Observação sobre os dados
-
-A SpaceX API é mantida pela comunidade e seus dados não são atualizados com frequência; por isso o "último lançamento" e os "próximos" refletem o que a API tem registrado, não necessariamente a data de hoje.

@@ -19,7 +19,7 @@ class SpxLogApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SPX Log',
+      title: 'Órbita Log',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(),
       home: const AppShell(),

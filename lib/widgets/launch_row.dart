@@ -5,18 +5,12 @@ import '../theme/app_theme.dart';
 import '../utils/format.dart';
 import 'status_tag.dart';
 
-// Linha de lançamento: número do voo, nome, data/foguete e status.
+// Linha de lançamento: data, nome, foguete/agência e status.
 class LaunchRow extends StatelessWidget {
   final Launch launch;
-  final String rocketName;
   final VoidCallback onTap;
 
-  const LaunchRow({
-    super.key,
-    required this.launch,
-    required this.rocketName,
-    required this.onTap,
-  });
+  const LaunchRow({super.key, required this.launch, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -31,10 +25,17 @@ class LaunchRow extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
-              width: 56,
-              child: Text(
-                formatFlight(launch.flightNumber),
-                style: AppText.label.copyWith(color: AppColors.signal),
+              width: 64,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    formatDayMonth(launch.date),
+                    style: AppText.label.copyWith(color: AppColors.signal),
+                  ),
+                  const SizedBox(height: 4),
+                  Text('${launch.date.toUtc().year}', style: AppText.label),
+                ],
               ),
             ),
             Expanded(
@@ -44,8 +45,10 @@ class LaunchRow extends StatelessWidget {
                   Text(launch.name, style: AppText.title),
                   const SizedBox(height: 6),
                   Text(
-                    '${formatDate(launch.date)}  ·  ${rocketName.toUpperCase()}',
+                    '${launch.rocketName}  ·  ${launch.provider}'.toUpperCase(),
                     style: AppText.label,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

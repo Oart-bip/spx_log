@@ -9,17 +9,16 @@ import '../widgets/status_tag.dart';
 
 class LaunchDetailScreen extends StatelessWidget {
   final Launch launch;
-  final String rocketName;
 
-  const LaunchDetailScreen({super.key, required this.launch, required this.rocketName});
+  const LaunchDetailScreen({super.key, required this.launch});
 
   @override
   Widget build(BuildContext context) {
-    final links = <String, String?>{
-      'TRANSMISSÃO': launch.webcast,
-      'ARTIGO': launch.article,
-      'WIKIPEDIA': launch.wikipedia,
-    }..removeWhere((_, url) => url == null);
+    // Numeração automática das seções, já que algumas são opcionais.
+    var n = 0;
+    String proxima() => (++n).toString().padLeft(2, '0');
+
+    final plataforma = [launch.padName, launch.location].whereType<String>().join('\n');
 
     return Scaffold(
       body: SafeArea(
@@ -39,19 +38,22 @@ class LaunchDetailScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            if (launch.patchUrl != null)
-              Align(
-                alignment: Alignment.centerRight,
+            if (launch.imageUrl != null) ...[
+              AspectRatio(
+                aspectRatio: 16 / 9,
                 child: Image.network(
-                  launch.patchUrl!,
-                  height: 120,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  launch.imageUrl!,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (_, child, progress) =>
+                      progress == null ? child : Container(color: AppColors.panel),
+                  errorBuilder: (_, __, ___) => Container(color: AppColors.panel),
                 ),
               ),
-            Text(formatFlight(launch.flightNumber), style: AppText.label.copyWith(color: AppColors.signal)),
+              const SizedBox(height: 20),
+            ],
+            Text(launch.provider.toUpperCase(), style: AppText.label.copyWith(color: AppColors.signal)),
             const SizedBox(height: 8),
-            Text(launch.name, style: AppText.display.copyWith(fontSize: 40)),
+            Text(launch.name, style: AppText.display.copyWith(fontSize: 36)),
             const SizedBox(height: 16),
             StatusTag(status: launch.status),
             const SizedBox(height: 28),
@@ -60,38 +62,27 @@ class LaunchDetailScreen extends StatelessWidget {
               StatCell(label: 'HORA', value: formatTime(launch.date)),
             ]),
             StatRow(cells: [
-              StatCell(label: 'FOGUETE', value: rocketName),
+              StatCell(label: 'FOGUETE', value: launch.rocketName),
+              StatCell(label: 'ÓRBITA', value: launch.orbit ?? '-'),
             ]),
             const SizedBox(height: 32),
-            const SectionLabel('01', 'RELATÓRIO'),
+            SectionLabel(proxima(), 'RELATÓRIO'),
             const SizedBox(height: 16),
             Text(
-              launch.details ?? 'A API não traz descrição para esta missão.',
+              launch.missionDescription ?? 'A API não traz descrição para esta missão.',
               style: AppText.body,
             ),
-            if (launch.failures.isNotEmpty) ...[
+            if (launch.failReason != null) ...[
               const SizedBox(height: 32),
-              const SectionLabel('02', 'FALHAS'),
+              SectionLabel(proxima(), 'FALHA'),
               const SizedBox(height: 16),
-              for (final motivo in launch.failures)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text('— $motivo', style: AppText.body.copyWith(color: AppColors.fail)),
-                ),
+              Text(launch.failReason!, style: AppText.body.copyWith(color: AppColors.fail)),
             ],
-            if (links.isNotEmpty) ...[
+            if (plataforma.isNotEmpty) ...[
               const SizedBox(height: 32),
-              SectionLabel(launch.failures.isEmpty ? '02' : '03', 'LINKS'),
+              SectionLabel(proxima(), 'PLATAFORMA'),
               const SizedBox(height: 16),
-              for (final entry in links.entries) ...[
-                Text(entry.key, style: AppText.label),
-                const SizedBox(height: 4),
-                SelectableText(
-                  entry.value!,
-                  style: AppText.label.copyWith(color: AppColors.bone, letterSpacing: 0.2),
-                ),
-                const SizedBox(height: 14),
-              ],
+              Text(plataforma.toUpperCase(), style: AppText.label.copyWith(height: 1.8)),
             ],
           ],
         ),

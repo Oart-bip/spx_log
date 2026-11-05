@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../services/spacex_service.dart';
+import '../services/space_service.dart';
 import '../theme/app_theme.dart';
 import 'state_views.dart';
 
 // Cuida dos três estados de uma requisição (carregando, erro, dados).
-// O builder deve devolver um widget rolável, para o "puxar para atualizar" funcionar.
+// O loader recebe "force" (true ao atualizar). O builder deve devolver um
+// widget rolável, para o "puxar para atualizar" funcionar.
 class FutureView<T> extends StatefulWidget {
-  final Future<T> Function() loader;
+  final Future<T> Function(bool force) loader;
   final Widget Function(BuildContext context, T data) builder;
 
   const FutureView({super.key, required this.loader, required this.builder});
@@ -22,11 +23,11 @@ class _FutureViewState<T> extends State<FutureView<T>> {
   @override
   void initState() {
     super.initState();
-    _future = widget.loader();
+    _future = widget.loader(false);
   }
 
   Future<void> _reload() async {
-    final novo = widget.loader();
+    final novo = widget.loader(true);
     setState(() => _future = novo);
     try {
       await novo;
@@ -48,7 +49,7 @@ class _FutureViewState<T> extends State<FutureView<T>> {
           return Center(
             child: StateMessage(
               title: 'Sem sinal.',
-              message: erro is SpaceXException ? erro.message : 'Ocorreu um erro inesperado.',
+              message: erro is ApiException ? erro.message : 'Ocorreu um erro inesperado.',
               actionLabel: 'TENTAR DE NOVO',
               onAction: _reload,
             ),

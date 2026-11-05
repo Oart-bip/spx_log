@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/launch.dart';
-import '../services/spacex_service.dart';
+import '../services/space_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/routes.dart';
 import '../widgets/filter_tabs.dart';
@@ -9,12 +9,6 @@ import '../widgets/future_view.dart';
 import '../widgets/launch_row.dart';
 import '../widgets/state_views.dart';
 import 'launch_detail_screen.dart';
-
-class _LaunchesData {
-  final List<Launch> launches;
-  final Map<String, String> rocketNames;
-  _LaunchesData(this.launches, this.rocketNames);
-}
 
 class LaunchesScreen extends StatefulWidget {
   const LaunchesScreen({super.key});
@@ -29,15 +23,7 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
   int _filter = 0;
   String _query = '';
 
-  Future<_LaunchesData> _load() async {
-    final r = await Future.wait<Object>([
-      spaceX.fetchLaunches(),
-      spaceX.fetchRocketNames(),
-    ]);
-    return _LaunchesData(r[0] as List<Launch>, r[1] as Map<String, String>);
-  }
-
-  // Aplica o filtro de status e a busca por nome.
+  // Aplica o filtro de status e a busca (por nome, foguete ou agência).
   List<Launch> _apply(List<Launch> all) {
     final wanted = switch (_filter) {
       1 => LaunchStatus.success,
@@ -45,10 +31,13 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
       3 => LaunchStatus.upcoming,
       _ => null,
     };
+    final busca = _query.toLowerCase();
 
     final result = all.where((l) {
       final statusOk = wanted == null || l.status == wanted;
-      final queryOk = l.name.toLowerCase().contains(_query.toLowerCase());
+      final queryOk = l.name.toLowerCase().contains(busca) ||
+          l.rocketName.toLowerCase().contains(busca) ||
+          l.provider.toLowerCase().contains(busca);
       return statusOk && queryOk;
     }).toList();
 
@@ -81,7 +70,7 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
                     border: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.line)),
                     enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.line)),
                     focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.signal)),
-                    hintText: 'BUSCAR MISSÃO',
+                    hintText: 'BUSCAR MISSÃO, FOGUETE OU AGÊNCIA',
                     hintStyle: AppText.label,
                     prefixText: '/ ',
                     prefixStyle: AppText.data.copyWith(fontSize: 14, color: AppColors.signal),
@@ -98,10 +87,10 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
             ),
           ),
           Expanded(
-            child: FutureView<_LaunchesData>(
-              loader: _load,
-              builder: (context, data) {
-                final items = _apply(data.launches);
+            child: FutureView<List<Launch>>(
+              loader: (force) => spaceService.fetchAllLaunches(force: force),
+              builder: (context, all) {
+                final items = _apply(all);
 
                 if (items.isEmpty) {
                   return ListView(
@@ -122,12 +111,10 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
                   itemCount: items.length,
                   itemBuilder: (context, i) {
                     final launch = items[i];
-                    final rocket = data.rocketNames[launch.rocketId] ?? '-';
                     return LaunchRow(
                       launch: launch,
-                      rocketName: rocket,
                       onTap: () => Navigator.of(context).push(
-                        fadeRoute(LaunchDetailScreen(launch: launch, rocketName: rocket)),
+                        fadeRoute(LaunchDetailScreen(launch: launch)),
                       ),
                     );
                   },

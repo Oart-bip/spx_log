@@ -15,7 +15,10 @@ String formatTime(DateTime d) {
   return '${_dois(u.hour)}:${_dois(u.minute)} UTC';
 }
 
-String formatFlight(int n) => '#${n.toString().padLeft(3, '0')}';
+String formatDayMonth(DateTime d) {
+  final u = d.toUtc();
+  return '${_dois(u.day)} ${_meses[u.month - 1]}';
+}
 
 // 17000 -> 17.000
 String formatInt(int n) {
