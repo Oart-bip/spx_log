@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Órbita Log — Diário de voo
 
 Aplicativo Flutter que funciona como um diário de bordo de lançamentos espaciais: mostra o próximo lançamento com contagem de dias, a lista de missões (com filtro e busca), os foguetes mais utilizados e estatísticas gerais. Todas as informações vêm da API em tempo de execução.
@@ -80,3 +81,6 @@ lib/
   theme/                    cores e estilos de texto
   utils/                    leitura de JSON, formatação e transição de rota
 ```
+=======
+
+>>>>>>> 1e61cf87ff4afae4d967b409f0111796cb9598a3
